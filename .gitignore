@@ -1,0 +1,4 @@
+createSensitivityData/
+sensitivityAnalysis/
+./little1971/[0-9]{1,}*
+diff_mortality/
