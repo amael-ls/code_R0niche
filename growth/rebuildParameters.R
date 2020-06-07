@@ -421,6 +421,8 @@ dev.off()
 
 
 ## Output tsn_dt
+saveRDS(tsn_dt, "./tsn.rds")
+
 tsn_xt = xtable(setcolorder(tsn_dt[, -c("species_id", "shadeTol", "tsn", "pageInfo", "array_id")],
 	c("species", "latin", "vernacular", "cs_coeff", "tolLevel")))
 
