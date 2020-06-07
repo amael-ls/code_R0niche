@@ -34,12 +34,6 @@ ls_species = readtable('../createMatlabData/ls_species.csv');
 integral_bounds = readtable('../createMatlabData/dbh_params.csv');
 integral_bounds.Properties.RowNames = integral_bounds.species_id;
 
-%% Growth function to compute size at age_max. Autonomous ODE, but 't' is required by ODE45
-growth_fct = @(t, dbh, c0, c1, c2, scmu_g, scsd_g, scmu_dbh, scsd_dbh) ...
-	exp(scsd_g * (c0 + ...
-    c1*(dbh - scmu_dbh)/scsd_dbh + ...
-    c2*((dbh - scmu_dbh)/scsd_dbh)^2) + scmu_g);
-
 %% Run
 % --- Species-specific parameters and data
 currentSpecies = ls_species.x{array_id};
@@ -72,9 +66,10 @@ climate_over_m = climate_over_m(:, {'beta0', 'beta1', 'beta2'});
 climate_under_m = readtable(char(strcat('./Matlab_data/', currentSpecies, '/matlabMortality_below.csv')));
 climate_under_m = climate_under_m(:, {'beta0', 'beta1', 'beta2'});
 
-s_star = integral_bounds(currentSpecies, 'dbh_star10').dbh_star10;
 s_inf = integral_bounds(currentSpecies, 'dbh_inf').dbh_inf;
 age_max = integral_bounds(currentSpecies, 'age_max').age_max;
+local_s = readtable(char(strcat('./results/', currentSpecies, '/local_s_inf.csv')), 'ReadVariableNames', false);
+local_s = local_s.Var1;
 
 allometries = allometries(currentSpecies, {'a', 'b', 'T'});
 
@@ -92,7 +87,6 @@ end
 
 % --- Define vector of results to save
 R0_10m = zeros(n, 1);
-local_s_inf = zeros(n, 1);
 
 disp('parfor loop starting')
 
@@ -104,22 +98,15 @@ parfor (j = 1:n)
 	fixef_growth_under = climate_under_g(j, :);
 	fixef_mortality_under = climate_under_m(j, :);
 
-	sol_dbh = ode45(@(t, x) growth_fct(t, x, fixef_growth_over.beta0, fixef_growth_over.beta1, fixef_growth_over.beta2, mu_g, sd_g, mu_dbh_g, sd_dbh_g), [0 age_max], 0);
-	local_s_inf(j) = sol_dbh.y(end);
+	local_s_inf = local_s(j);
 
-	current_s_inf = min(local_s_inf(j), s_inf);
-
-	if current_s_inf < s_star
-		continue
-	end
+	current_s_inf = min(local_s_inf, s_inf);
 
 	R0_10m(j) = pi*fec * ...
-	survivorship( s_star, fixef_growth_under, fixef_mortality_under, scalingGrowth, dbh_scalingGrowth, dbh_scalingMortality ) * ...
-	integral( @(x) integrand( x, s_star, fixef_growth_over, fixef_mortality_over, scalingGrowth, dbh_scalingGrowth, dbh_scalingMortality, allometries, C0_C1, 'true' ), s_star, current_s_inf, 'ArrayValued', true);
+	integral( @(x) integrand( x, 0, fixef_growth_over, fixef_mortality_over, scalingGrowth, dbh_scalingGrowth, dbh_scalingMortality, allometries, C0_C1, 'true' ), 0, current_s_inf, 'ArrayValued', true);
 end
 toc
-csvwrite(char(strcat('./results/', currentSpecies, '/R0_10m.csv')), R0_10m)
-csvwrite(char(strcat('./results/', currentSpecies, '/local_s_inf.csv')), local_s_inf)
+csvwrite(char(strcat('./results/', currentSpecies, '/R0_0m.csv')), R0_10m)
 
 delete(gcp);
 exit;
