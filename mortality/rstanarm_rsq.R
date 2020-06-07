@@ -1,6 +1,6 @@
 
 #### Aims of prog: Calculate the R^2 of the 7 bayesian regression models
-## 7 models are compared:
+## R^2 cannot be compared between models!
 #
 
 #### Load packages

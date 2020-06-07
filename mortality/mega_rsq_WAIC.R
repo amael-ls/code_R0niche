@@ -22,7 +22,7 @@ nbSpecies = 14
 nbModels = 7 # Got lucky, I have the same number of models for both rstanarm.R and rstanarm_submodels.R
 
 #### Bind (sub)models for each sp
-for (i in 1:nbSpecies)
+for (i in 1:14)
 {
 	(loadPath = paste0("./array_", i, "/"))
 	ls_waic = vector("list", length = nbModels)
@@ -31,7 +31,7 @@ for (i in 1:nbSpecies)
 	for (j in 1:nbModels)
 	{
 		waic = readRDS(paste0(loadPath, "waic", j, ".rds"))
-		waic_submodels = readRDS(paste0(loadPath, "waic", j, "_submodels.rds"))
+		waic_submodels = readRDS(paste0(loadPath, "waic", j, "_submodel.rds"))
 		rsq = readRDS(paste0(loadPath, "rsq_", j, ".rds"))
 
 		ls_waic[[j]] = data.table(model = paste0("model", j),

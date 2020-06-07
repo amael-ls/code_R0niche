@@ -97,10 +97,10 @@ genParams = function(fixef, ppa_status)
 
 ## Mortality function /!\ The dbh is scaled within the function /!\
 # Regardless of the estimation algorithm, point estimates are medians computed from simulations.
-mortality_fct = function(x, temp, precip, params, scalingMortality)
+mortality_fct = function(x, temp, precip, params, scalingMortality, deltaYear = 1)
 {
 	# Intercept
-	beta_0 = params[["(Intercept)"]]
+	beta_0 = params[["(Intercept)"]] + log(deltaYear)
 
 	# Phi
 	beta_1 = params[["dbh"]]
@@ -117,11 +117,11 @@ mortality_fct = function(x, temp, precip, params, scalingMortality)
 	# Z-transform
 	x = (x - scalingMortality[var == "dbh", mu])/scalingMortality[var == "dbh", sd]
 
-	# logit (p)
-	logit_p = unname(beta_0 + beta_1*x + beta_2*x^2 + beta_3*temp + beta_4*temp^2 + beta_5*precip + beta_6*precip^2)
+	# complementary logarithm (p)
+	cloglog = unname(beta_0 + beta_1*x + beta_2*x^2 + beta_3*temp + beta_4*temp^2 + beta_5*precip + beta_6*precip^2)
 
-	# 1/(1 + exp(-logit_p)) is the sigmoid, the reciprocal function of logit
-	return ( 1/(1 + exp(-logit_p)) )
+	# 1 - exp(-exp(x)) is the reciprocal function of cloglog
+	return ( 1 - exp(-exp(cloglog)) )
 }
 
 #### Plot
@@ -143,7 +143,7 @@ for (i in 1:nbFolders)
 	dbh_lim_m = 0
 	dbh_lim_M = 1500
 
-	mortality_dt = readRDS("../createData/mortality_dt.rds")[species_id == sp, .(dbh)]
+	mortality_dt = readRDS("../createData/mortality_dt.rds")[(species_id == sp) & (4 < deltaYear) & (deltaYear < 12), .(dbh)]
 	dbh_m = mortality_dt[, min(dbh)]
 	dbh_M = mortality_dt[, max(dbh)]
 
@@ -244,7 +244,7 @@ for (i in 1:nbFolders)
 		from = dbh_lim_m, to = dbh_lim_M, lwd = 2, col = "#3333ff", add = TRUE, lty = "dotted")
 	curve(mortality_fct(x, temperature, precipitation, parameters_below[index_min_below], scalingMortality),
 		from = dbh_lim_m, to = dbh_lim_M, lwd = 2, col = "#3333ff", add = TRUE, lty = "dotted")
-	# Polygon of parametrisation
+	# Arrow: dbh range of parametrisation
 	tikzCoord(dbh_m, 0, 'arrow_start')
 	tikzCoord(dbh_M, 0, 'arrow_end')
 	tikzAnnotate("\\draw[<->,>=stealth,thick,rounded corners=4pt,line width=1pt] (arrow_start) -- (arrow_end);")

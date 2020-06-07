@@ -55,7 +55,8 @@ sortingSpecies = function(ls_species, decreasingOrder = FALSE)
 treeData = readRDS("treeClim_sStar.rds")
 
 ## Number of plots
-print(paste0("There are ", length(unique(treeData[, plot_id])), " plots in the database"))
+nbPlots = length(unique(treeData[, plot_id]))
+print(paste0("There are ", nbPlots, " plots in the database"))
 
 ## Keep exclusively columns of interest
 treeData = unique(treeData[, .(tree_id, year_measured, species_id,
@@ -72,7 +73,8 @@ canada = st_geometry(canada)
 usa = st_geometry(usa)
 
 ## Coerce to simple feature and reproject to EPSG:2163
-treeData_sf = st_as_sf(treeData, coords = c("longitude", "latitude"),
+treeData_sf = unique(treeData[, .(longitude, latitude)])
+treeData_sf = st_as_sf(treeData_sf, coords = c("longitude", "latitude"),
 	crs = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs")
 
 treeData_sf = st_transform(treeData_sf, crs = st_crs(usa))
@@ -81,13 +83,16 @@ treeData_sf = st_transform(treeData_sf, crs = st_crs(usa))
 in_can = st_contains(canada, treeData_sf, sparse = FALSE)
 in_usa = st_contains(usa, treeData_sf, sparse = FALSE)
 
-countedTwice = sum(in_can) + sum(in_usa) - treeData[, .N]
+saveRDS(in_can, "./in_can.rds")
+saveRDS(in_usa, "./in_usa.rds")
+
+countedTwice = sum(in_can) + sum(in_usa) - nrow(treeData_sf) # If negative, then there are forgotten rather than counted twice
 
 print(paste0("There are ", sum(in_can), " in Canada"))
 print(paste0("There are ", sum(in_usa) - countedTwice, " in USA"))
 
-print(paste0("There are ", round(sum(in_can)*100/treeData[, .N], 2), "% in Canada"))
-print(paste0("There are ", round((sum(in_usa) - countedTwice)*100/treeData[, .N], 2), "% in USA"))
+print(paste0("There are ", round(sum(in_can)*100/nrow(treeData_sf), 2), "% in Canada"))
+print(paste0("There are ", round((sum(in_usa) - countedTwice)*100/nrow(treeData_sf), 2), "% in USA"))
 
 #### Climatic/geographic range for each species
 ## Keep only 14 species
@@ -98,7 +103,8 @@ ls_14species = c("19481-BET-ALL", "19489-BET-PAP", "28731-ACE-SAC", "28728-ACE-R
 treeData = treeData[species_id %in% ls_14species]
 
 ## Coerce to simple feature and reproject to EPSG:2163
-treeData_sf = st_as_sf(treeData, coords = c("longitude", "latitude"),
+treeData_sf = unique(treeData[, .(longitude, latitude)])
+treeData_sf = st_as_sf(treeData_sf, coords = c("longitude", "latitude"),
 	crs = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs")
 
 treeData_sf = st_transform(treeData_sf, crs = st_crs(usa))
@@ -107,13 +113,16 @@ treeData_sf = st_transform(treeData_sf, crs = st_crs(usa))
 in_can = st_contains(canada, treeData_sf, sparse = FALSE)
 in_usa = st_contains(usa, treeData_sf, sparse = FALSE)
 
-countedTwice = sum(in_can) + sum(in_usa) - treeData[, .N]
+saveRDS(in_can, "./in_can2.rds")
+saveRDS(in_usa, "./in_usa2.rds")
+
+countedTwice = sum(in_can) + sum(in_usa) - nrow(treeData_sf) # If negative, then there are forgotten rather than counted twice
 
 print(paste0("There are ", sum(in_can), " in Canada"))
 print(paste0("There are ", sum(in_usa) - countedTwice, " in USA"))
 
-print(paste0("There are ", round(sum(in_can)*100/treeData[, .N], 2), "% in Canada"))
-print(paste0("There are ", round((sum(in_usa) - countedTwice)*100/treeData[, .N], 2), "% in USA"))
+print(paste0("There are ", round(sum(in_can)*100/nrow(treeData_sf), 2), "% in Canada"))
+print(paste0("There are ", round((sum(in_usa) - countedTwice)*100/nrow(treeData_sf), 2), "% in USA"))
 
 ## Climatic range
 climVar = c("annual_mean_temperature", "min_temperature_of_coldest_month",
@@ -235,12 +244,21 @@ for (i in seq(1, length(climVar), by = 2))
 }
 
 #### Frequency of measurements
+## Growth
 growth_dt = readRDS("./growth_dt.rds")
 sum(growth_dt[(3 <= deltaYear) & (deltaYear <= 10), table(deltaYear)]*100/growth_dt[, .N])
 sum(growth_dt[(3 <= deltaYear) & (deltaYear <= 7), table(deltaYear)]*100/growth_dt[, .N])
 sum(growth_dt[(3 <= deltaYear) & (deltaYear <= 15), table(deltaYear)]*100/growth_dt[, .N])
 sum(growth_dt[deltaYear == 5, table(deltaYear)]*100/growth_dt[, .N])
 growth_dt[, table(deltaYear)]
+
+## Mortality
+mortality_dt = readRDS("./mortality_dt.rds")
+sum(mortality_dt[(3 <= deltaYear) & (deltaYear <= 10), table(deltaYear)]*100/mortality_dt[, .N])
+sum(mortality_dt[(3 <= deltaYear) & (deltaYear <= 7), table(deltaYear)]*100/mortality_dt[, .N])
+sum(mortality_dt[(5 <= deltaYear) & (deltaYear <= 11), table(deltaYear)]*100/mortality_dt[, .N])
+sum(mortality_dt[deltaYear == 5, table(deltaYear)]*100/mortality_dt[, .N])
+mortality_dt[, table(deltaYear)]
 
 #### linear model s* with latitude
 ## Keep variable of interest of growth_dt

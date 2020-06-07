@@ -6,17 +6,16 @@ disp('Matlab main.m is starting')
 
 %% Parallel pool cluster
 % create a local cluster object
-pc = parcluster('local')
+pc = parcluster('local');
 
 % explicitly set the JobStorageLocation to the temp directory that was
 % created in the sbatch script submission.sh
-pc.JobStorageLocation = strcat('/scratch/amael/', getenv('SLURM_JOB_ID'))
+pc.JobStorageLocation = strcat('/scratch/amael/', getenv('SLURM_JOB_ID'));
 
 array_id = str2num(getenv('SLURM_ARRAY_TASK_ID'));
 disp(['array id: ', num2str(array_id)])
 
 slurm_cpus = str2num(getenv('SLURM_CPUS_PER_TASK'));
-disp(['number of CPUs: ', num2str(slurm_cpus)])
 
 parpool(pc, str2num(getenv('SLURM_CPUS_PER_TASK')))
 
@@ -35,20 +34,31 @@ ls_species = readtable('../createMatlabData/ls_species.csv');
 integral_bounds = readtable('../createMatlabData/dbh_params.csv');
 integral_bounds.Properties.RowNames = integral_bounds.species_id;
 
+%% Growth function to compute size at age_max. Autonomous ODE, but 't' is required by ODE45
+growth_fct = @(t, dbh, c0, c1, c2, scmu_g, scsd_g, scmu_dbh, scsd_dbh) ...
+	exp(scsd_g * (c0 + ...
+    c1*(dbh - scmu_dbh)/scsd_dbh + ...
+    c2*((dbh - scmu_dbh)/scsd_dbh)^2) + scmu_g);
+
 %% Run
 % --- Species-specific parameters and data
 currentSpecies = ls_species.x{array_id};
 disp(['species id: ', currentSpecies])
 
-scalingGrowth = readtable(char(strcat('../createMatlabData/growthScaling.csv')));
+scalingGrowth = readtable('../createMatlabData/growthScaling.csv');
 scalingGrowth.Properties.RowNames = scalingGrowth.species_id;
 scalingGrowth = scalingGrowth(currentSpecies, {'mu', 'sd'});
 
-dbh_scalingGrowth = readtable(char(strcat('../createMatlabData/growthDbhScaling.csv')));
+dbh_scalingGrowth = readtable('../createMatlabData/growthDbhScaling.csv');
 dbh_scalingGrowth.Properties.RowNames = dbh_scalingGrowth.species_id;
 dbh_scalingGrowth = dbh_scalingGrowth(currentSpecies, {'mu', 'sd'});
 
-dbh_scalingMortality = readtable(char(strcat('../createMatlabData/mortalityDbhScaling.csv')));
+mu_g = scalingGrowth.mu;
+sd_g = scalingGrowth.sd;
+mu_dbh_g = dbh_scalingGrowth.mu;
+sd_dbh_g = dbh_scalingGrowth.sd;
+
+dbh_scalingMortality = readtable('../createMatlabData/mortalityDbhScaling.csv');
 dbh_scalingMortality.Properties.RowNames = dbh_scalingMortality.species_id;
 dbh_scalingMortality = dbh_scalingMortality(currentSpecies, {'mu', 'sd'});
 
@@ -63,7 +73,8 @@ climate_under_m = readtable(char(strcat('./Matlab_data/', currentSpecies, '/matl
 climate_under_m = climate_under_m(:, {'beta0', 'beta1', 'beta2'});
 
 s_star = integral_bounds(currentSpecies, 'dbh_star10').dbh_star10;
-s_inf = integral_bounds(currentSpecies, 'dbh_infinity').dbh_infinity;
+s_inf = integral_bounds(currentSpecies, 'dbh_inf').dbh_inf;
+age_max = integral_bounds(currentSpecies, 'age_max').age_max;
 
 allometries = allometries(currentSpecies, {'a', 'b', 'T'});
 
@@ -81,6 +92,7 @@ end
 
 % --- Define vector of results to save
 R0_10m = zeros(n, 1);
+local_s_inf = zeros(n, 1);
 
 disp('parfor loop starting')
 
@@ -92,12 +104,22 @@ parfor (j = 1:n)
 	fixef_growth_under = climate_under_g(j, :);
 	fixef_mortality_under = climate_under_m(j, :);
 
+	sol_dbh = ode45(@(t, x) growth_fct(t, x, fixef_growth_over.beta0, fixef_growth_over.beta1, fixef_growth_over.beta2, mu_g, sd_g, mu_dbh_g, sd_dbh_g), [0 age_max], 0);
+	local_s_inf(j) = sol_dbh.y(end);
+
+	current_s_inf = min(local_s_inf(j), s_inf);
+
+	if current_s_inf < s_star
+		continue
+	end
+
 	R0_10m(j) = pi*fec * ...
 	survivorship( s_star, fixef_growth_under, fixef_mortality_under, scalingGrowth, dbh_scalingGrowth, dbh_scalingMortality ) * ...
-	integral( @(x) integrand( x, s_star, fixef_growth_over, fixef_mortality_over, scalingGrowth, dbh_scalingGrowth, dbh_scalingMortality, allometries, C0_C1, 'true' ), s_star, s_inf, 'ArrayValued', true);
+	integral( @(x) integrand( x, s_star, fixef_growth_over, fixef_mortality_over, scalingGrowth, dbh_scalingGrowth, dbh_scalingMortality, allometries, C0_C1, 'true' ), s_star, current_s_inf, 'ArrayValued', true);
 end
 toc
 csvwrite(char(strcat('./results/', currentSpecies, '/R0_10m.csv')), R0_10m)
+csvwrite(char(strcat('./results/', currentSpecies, '/local_s_inf.csv')), local_s_inf)
 
 delete(gcp);
 exit;

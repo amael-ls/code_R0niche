@@ -2,14 +2,13 @@
 # Species specific linear response to climate
 if (formula_id == 1)
 {
-	model = stan_glmer(formula = deltaState ~ 1 + (1 | plot_id) +
+	model = stan_glm(formula = deltaState ~ 1 +
 		min_temperature_of_coldest_month + precipitation_of_driest_quarter,
 		data = mortality_data_norm,
-		family = binomial, iter = 2000, cores = 4, chains = 4,
+		family = binomial(link = "cloglog"), offset = log(deltaYear), iter = 3000, cores = 4, chains = 4,
 		prior = normal(),
 		prior_intercept = normal(),
 		prior_aux = exponential(),
-		prior_covariance = decov(),
 		prior_PD = FALSE,
 		# diagnostic_file = paste0(savePath, "diagnostic", formula_id, ".csv"),
 		algorithm = "sampling")
@@ -19,32 +18,30 @@ if (formula_id == 1)
 # Species specific quadratic response to climate
 if (formula_id == 2)
 {
-	model = stan_glmer(formula = deltaState ~ 1 + (1 | plot_id) +
+	model = stan_glm(formula = deltaState ~ 1 +
 		min_temperature_of_coldest_month + I(min_temperature_of_coldest_month^2) +
 			precipitation_of_driest_quarter + I(precipitation_of_driest_quarter^2),
 		data = mortality_data_norm,
-		family = binomial, iter = 2000, cores = 4, chains = 4,
+		family = binomial(link = "cloglog"), offset = log(deltaYear), iter = 3000, cores = 4, chains = 4,
 		prior = normal(),
 		prior_intercept = normal(),
 		prior_aux = exponential(),
-		prior_covariance = decov(),
 		prior_PD = FALSE,
 		# diagnostic_file = paste0(savePath, "diagnostic", formula_id, ".csv"),
 		algorithm = "sampling")
 		saveRDS(model, paste0(savePath, "submodel_2.rds"))
 }
 
-# No climate response, growth change only with canopy status (correspond to Strigul 2008)
+# No climate response, growth changes only with canopy status (correspond to Strigul 2008)
 if (formula_id == 3)
 {
-	model = stan_glmer(formula = deltaState ~ 1 + (1 | plot_id) +
+	model = stan_glm(formula = deltaState ~ 1 +
 		canopy_status,
 		data = mortality_data_norm,
-		family = binomial, iter = 2000, cores = 4, chains = 4,
+		family = binomial(link = "cloglog"), offset = log(deltaYear), iter = 3000, cores = 4, chains = 4,
 		prior = normal(),
 		prior_intercept = normal(),
 		prior_aux = exponential(),
-		prior_covariance = decov(),
 		prior_PD = FALSE,
 		# diagnostic_file = paste0(savePath, "diagnostic", formula_id, ".csv"),
 		algorithm = "sampling")
@@ -56,16 +53,15 @@ if (formula_id == 3)
 # 		- stronger negative drougth effect on understorey trees (weak root system)
 if (formula_id == 4)
 {
-	model = stan_glmer(formula = deltaState ~ 1 + (1 | plot_id) +
+	model = stan_glm(formula = deltaState ~ 1 +
 		canopy_status*(min_temperature_of_coldest_month +
 			I(min_temperature_of_coldest_month^2) +
 			precipitation_of_driest_quarter + I(precipitation_of_driest_quarter^2)),
 		data = mortality_data_norm,
-		family = binomial, iter = 2000, cores = 4, chains = 4,
+		family = binomial(link = "cloglog"), offset = log(deltaYear), iter = 3000, cores = 4, chains = 4,
 		prior = normal(),
 		prior_intercept = normal(),
 		prior_aux = exponential(),
-		prior_covariance = decov(),
 		prior_PD = FALSE,
 		# diagnostic_file = paste0(savePath, "diagnostic", formula_id, ".csv"),
 		algorithm = "sampling")
@@ -75,14 +71,13 @@ if (formula_id == 4)
 # Sp-specific linear response to individual size only
 if (formula_id == 5)
 {
-	model = stan_glmer(formula = deltaState ~ 1 + (1 | plot_id) +
+	model = stan_glm(formula = deltaState ~ 1 +
 		dbh,
 		data = mortality_data_norm,
-		family = binomial, iter = 2000, cores = 4, chains = 4,
+		family = binomial(link = "cloglog"), offset = log(deltaYear), iter = 3000, cores = 4, chains = 4,
 		prior = normal(),
 		prior_intercept = normal(),
 		prior_aux = exponential(),
-		prior_covariance = decov(),
 		prior_PD = FALSE,
 		# diagnostic_file = paste0(savePath, "diagnostic", formula_id, ".csv"),
 		algorithm = "sampling")
@@ -92,14 +87,13 @@ if (formula_id == 5)
 # Sp-specific quadratic response to individual size only
 if (formula_id == 6)
 {
-	model = stan_glmer(formula = deltaState ~ 1 + (1 | plot_id) +
+	model = stan_glm(formula = deltaState ~ 1 +
 		dbh + I(dbh^2),
 		data = mortality_data_norm,
-		family = binomial, iter = 2000, cores = 4, chains = 4,
+		family = binomial(link = "cloglog"), offset = log(deltaYear), iter = 3000, cores = 4, chains = 4,
 		prior = normal(),
 		prior_intercept = normal(),
 		prior_aux = exponential(),
-		prior_covariance = decov(),
 		prior_PD = FALSE,
 		# diagnostic_file = paste0(savePath, "diagnostic", formula_id, ".csv"),
 		algorithm = "sampling")
@@ -109,16 +103,15 @@ if (formula_id == 6)
 # Sp-specific quadratic response to individual size, climate, and canopy status
 if (formula_id == 7)
 {
-	model = stan_glmer(formula = deltaState ~ 1 + (1 | plot_id) +
+	model = stan_glm(formula = deltaState ~ 1 +
 		canopy_status + min_temperature_of_coldest_month +
 			I(min_temperature_of_coldest_month^2) +
 			precipitation_of_driest_quarter + I(precipitation_of_driest_quarter^2) + dbh + I(dbh^2),
 		data = mortality_data_norm,
-		family = binomial, iter = 2000, cores = 4, chains = 4,
+		family = binomial(link = "cloglog"), offset = log(deltaYear), iter = 3000, cores = 4, chains = 4,
 		prior = normal(),
 		prior_intercept = normal(),
 		prior_aux = exponential(),
-		prior_covariance = decov(),
 		prior_PD = FALSE,
 		# diagnostic_file = paste0(savePath, "diagnostic", formula_id, ".csv"),
 		algorithm = "sampling")

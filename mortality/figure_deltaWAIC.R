@@ -59,31 +59,14 @@ M_x = max(ls_delta_waic[, x]) + 0.5
 m_y = floor(min(ls_delta_waic[, log10_delta_waic])) - 0.05
 M_y = ceiling(max(ls_delta_waic[, log10_delta_waic]))
 
-pdf("figure_deltaWAIC.pdf", height = 8, width = 8)
-par(mar = c(5,6,2,2))
-plot(ls_delta_waic[, .(x, log10_delta_waic)], xlab = "", ylab = "", main = "",
-    yaxt = "n", xaxt = "n", yaxs="i", xaxs="i", lwd = 1, xlim = c(m_x, M_x), ylim = c(m_y, M_y),
-	type = "p", pch = 19)
-lines(x_pos[, .(x, average)], type = "l", lwd = 3,
-	col = "#5CA7DD")
-points(unique(ls_delta_waic[, .(x, average)]), col = "#FFAD33", pch = 19, cex = 1.2)
-
-axis(1, at = x_pos[, x], labels = x_pos[, variables], cex.axis = 1.5)
-axis(2, at = 0:M_y, labels = 0:M_y, cex.axis = 1.5, las = 2)
-
-title(xlab = "Model", ylab = bquote(log[10](Delta~"AIC"[c])), cex.lab = 1.5)
-dev.off()
-
 tikz('figure_deltaWAIC.tex', width = 5, height = 5)
 plot(ls_delta_waic[, .(x, log10_delta_waic)], xlab = "", ylab = "", main = "",
     yaxt = "n", xaxt = "n", yaxs="i", xaxs="i", lwd = 1, xlim = c(m_x, M_x), ylim = c(m_y, M_y),
 	type = "p", pch = 19, col = rgb(30, 30, 30, maxColorValue = 255))
-lines(x_pos[, .(x, average)], type = "l", lwd = 2,
-	col = "#5CA7DD")
 points(unique(ls_delta_waic[, .(x, average)]), col = "#FFAD33", pch = 19)
 
 axis(1, at = x_pos[, x], labels = x_pos[, variables])
 axis(2, at = 0:M_y, labels = 0:M_y, las = 2)
 
-title(xlab = "Model", ylab = "$ \\log_{10}(\\Delta \\text{WAIC} + 1) $")
+title(xlab = "Mortality model", ylab = "$ \\log_{10}(\\Delta WAIC + 1) $")
 dev.off()

@@ -64,9 +64,9 @@ time_integ = zeros(n, 1);
 disp('parfor loop starting')
 
 tic
-parfor (j = 1:10000)
+parfor (j = 1:n)
 	fixef_growth_under = climate_under_g(j, :);
-	time_integ(j) = integral( @(x) growth_fct( x, fixef_growth_under, scalingGrowth, dbh_scalingGrowth ), 0, s_inf, 'ArrayValued', true);
+	time_integ(j) = integral( @(x) inv_growth_fct( x, fixef_growth_under, scalingGrowth, dbh_scalingGrowth ), 0, s_inf, 'ArrayValued', true);
 end
 toc
 csvwrite(char(strcat('./results/', currentSpecies, '/time_integ.csv')), time_integ)

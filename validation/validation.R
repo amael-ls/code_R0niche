@@ -15,7 +15,8 @@ rm(list = ls())
 graphics.off()
 options(max.print = 500)
 
-#### Tool function
+#### Tool functions
+## Get Species Distribution Model file name
 getSDMname = function(str)
 {
 	# Replace underscores by scores
@@ -78,8 +79,8 @@ for (i in 1:n)
 	sdm = readRDS(paste0("../randomForest/results/calibration/", sdm_name, "_cal.rds"))
 
 	# Matlab's results R0
-	R0 = unlist(fread(paste0("results/", species, "/R0_10m.csv")))
-	R0_0m = unlist(fread(paste0("results/", species, "/R0_0m.csv")))
+	R0 = unlist(fread(paste0("./results/", species, "/R0_10m.csv")))
+	R0_0m = unlist(fread(paste0("./results/", species, "/R0_0m.csv")))
 
 	## Prediction sdm on the plots
 	# Response (boolean)
@@ -129,6 +130,11 @@ correlation[, sp_code := getSDMname(species)[, "sp_code"]]
 setorderv(correlation, "sp_code", +1)
 
 saveRDS(correlation, "./correlation.rds")
+
+correlation[, round(min(correl_0m), 2)]
+correlation[, round(max(correl_0m), 2)]
+correlation[, round(min(correl_10m), 2)]
+correlation[, round(max(correl_10m), 2)]
 
 correlation_xt = xtable(correlation[, .(sp_code, correl_0m, correl_10m, R2_tjur, true_error, false_error)])
 

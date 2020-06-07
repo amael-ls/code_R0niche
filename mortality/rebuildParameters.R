@@ -68,10 +68,10 @@ extract_cs = function(array_id)
 
 ## Regardless of the estimation algorithm, point estimates are medians computed from simulations.
 ## Mortality function, note that ppa is already included, according to extractParams fct
-mortality_fct = function(x, temp, precip, params)
+mortality_fct = function(x, temp, precip, params, deltaYear = 1)
 {
 	# Intercept
-	beta_0 = params["(Intercept)"]
+	beta_0 = params["(Intercept)"] + log(deltaYear)
 
 	# Phi
 	beta_1 = params["dbh"]
@@ -85,11 +85,11 @@ mortality_fct = function(x, temp, precip, params)
 	beta_5 = params["precipitation_of_driest_quarter"]
 	beta_6 = params["I(precipitation_of_driest_quarter^2)"]
 
-	# logit (p)
-	logit_p = unname(beta_0 + beta_1*x + beta_2*x^2 + beta_3*temp + beta_4*temp^2 + beta_5*precip + beta_6*precip^2)
+	# complementary logarithm (p)
+	cloglog = unname(beta_0 + beta_1*x + beta_2*x^2 + beta_3*temp + beta_4*temp^2 + beta_5*precip + beta_6*precip^2)
 
-	# 1/(1 + exp(-logit_p)) is the sigmoid, the reciprocal function of logit
-	return ( 1/(1 + exp(-logit_p)) )
+	# 1 - exp(-exp(x)) is the reciprocal function of cloglog
+	return ( 1 - exp(-exp(cloglog)) )
 }
 
 ## Growth over- and under- storey, for average clim, and +/- x sd
@@ -277,10 +277,10 @@ abline(a = 0, b = 1, lwd = 2)
 dev.off()
 
 ## Averaged conditions
-axe_min = min(mortality_dt[, lapply(.SD, function(x) {return (min(x))}),
-	.SDcols = c("ref_a", "ref_b")]) - 0.01
+axe_min = ifelse(min(mortality_dt[, lapply(.SD, function(x) {return (min(x))}), .SDcols = c("ref_a", "ref_b")]) - 0.005 < 0,
+	0, min(mortality_dt[, lapply(.SD, function(x) {return (min(x))}), .SDcols = c("ref_a", "ref_b")]) - 0.005)
 axe_max = max(mortality_dt[, lapply(.SD, function(x) {return (max(x))}),
-	.SDcols = c("ref_a", "ref_b")]) + 0.01
+	.SDcols = c("ref_a", "ref_b")]) + 0.005
 
 pdf("./M_over-under-storey_averaged.pdf", height = 8, width = 8)
 plot(mortality_dt[, ref_b], mortality_dt[, ref_a], pch = 19, cex = 1.5, cex.axis = 1.5,
@@ -296,7 +296,7 @@ dev.off()
 tikz('./M_over-under-storey_averaged.tex', width = 3.1, height = 3.1)
 op <- par(mar = c(2.5, 2.5, 0.2, 0.2), mgp = c(1.5, 0.3, 0), tck = -0.015)
 plot(mortality_dt[, ref_b], mortality_dt[, ref_a], pch = 19,
-	xlab = "Understorey mortality", ylab = "Overstorey mortality",
+	xlab = "Understorey mortality $ \\mu $ (yr\\textsuperscript{-1})", ylab = "Overstorey mortality $ \\mu $ (yr\\textsuperscript{-1})",
 	xlim = c(axe_min, axe_max), ylim = c(axe_min, axe_max))
 
 # Add identity line
@@ -392,7 +392,7 @@ dev.off()
 tikz('groups_mortality.tex', width = 3.1, height = 3.1)
 op <- par(mar = c(2.5, 2.5, 0.2, 0.2), mgp = c(1.5, 0.3, 0), tck = -0.015)
 plot(tsn_dt$tolLevel, tsn_dt$cs_coeff,
-	xlab = "Shade tolerance level", ylab = "Response of $ \\mu $ to light")
+	xlab = "Shade tolerance level", ylab = "Response of mortality ($ \\mu $) to light")
 dev.off()
 
 # For beamer
@@ -460,16 +460,16 @@ saveRDS(parameters_below, "../createMatlabData/parameters_below_mortality.rds")
 # ## Test
 # # Using posterior_predict rstanarm 200 times and check if mean converge to what I want
 # newData_above = data.table(species_id = species, dbh = 0.5, min_temperature_of_coldest_month = 0.9,
-# 	precipitation_of_driest_quarter = -0.2, canopy_status = as.factor(TRUE))
+# 	precipitation_of_driest_quarter = -0.2, deltaYear = 6, canopy_status = as.factor(TRUE))
 # newData_below = data.table(species_id = species, dbh = 0.5, min_temperature_of_coldest_month = 0.9,
-# 	precipitation_of_driest_quarter = -0.2, canopy_status = as.factor(FALSE))
+# 	precipitation_of_driest_quarter = -0.2, deltaYear = 6, canopy_status = as.factor(FALSE))
 #
 # aa = numeric(2e2)
 # bb = aa
 # for (i in 1:2e2)
 # {
-# 	pred_above = posterior_predict(model, newData_above, re.form = NA)
-# 	pred_below = posterior_predict(model, newData_below, re.form = NA)
+# 	pred_above = posterior_predict(model, newData_above, offset = log(newData_above[, deltaYear]), re.form = NA)
+# 	pred_below = posterior_predict(model, newData_below, offset = log(newData_below[, deltaYear]), re.form = NA)
 # 	aa[i] = sum(pred_above)/length(pred_above)
 # 	bb[i] = sum(pred_below)/length(pred_below)
 # 	if (i %% 10 == 0)
@@ -479,11 +479,11 @@ saveRDS(parameters_below, "../createMatlabData/parameters_below_mortality.rds")
 # # Using mortality function
 # params_above = extractParams(fixef, TRUE)
 # params_below = extractParams(fixef, FALSE)
-# mortality_fct(0.5, 0.9, -0.2, params_above)
-# mortality_fct(0.5, 0.9, -0.2, params_below)
+# mortality_fct(0.5, 0.9, -0.2, params_above, deltaYear = 6)
+# mortality_fct(0.5, 0.9, -0.2, params_below, deltaYear = 6)
 #
 # mean(aa)
 # mean(bb)
 #
-# mortality_fct(0.5, 0.9, -0.2, params_above) - mean(aa)
-# mortality_fct(0.5, 0.9, -0.2, params_below) - mean(bb)
+# (mortality_fct(0.5, 0.9, -0.2, params_above, deltaYear = 6) - mean(aa))/mean(aa)*100
+# (mortality_fct(0.5, 0.9, -0.2, params_below, deltaYear = 6) - mean(bb))/mean(bb)*100

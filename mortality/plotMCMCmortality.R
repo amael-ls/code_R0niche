@@ -64,11 +64,11 @@ for (folder in ls_folders)
 	coeffToPlots = coeffToPlots[!stri_detect(str = coeffToPlots,
 		regex = "^b\\[\\(Intercept\\) plot_id")]
 
-	jpeg(paste0(savePath, species, "_hist.jpg"), quality = 100)
+	jpeg(paste0(savePath, species, "_hist.jpg"), height = 1080, width = 1080, quality = 100)
 	print(plot(x = model, plotfun = "mcmc_hist", pars = coeffToPlots))
 	dev.off()
 
-	jpeg(paste0(savePath, species, "_traces.jpg"), quality = 100)
+	jpeg(paste0(savePath, species, "_traces.jpg"), height = 1080, width = 1080, quality = 100)
 	print(plot(x = model, plotfun = "trace", pars = coeffToPlots))
 	dev.off()
 

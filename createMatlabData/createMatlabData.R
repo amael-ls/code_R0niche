@@ -13,12 +13,15 @@ library(data.table)
 library(doParallel)
 library(stringi)
 library(raster)
+library(fields)
 library(velox)
 library(sf)
 library(sp)
 
 rm(list = ls())
 graphics.off()
+
+array_id = 13
 
 #### Create the cluster
 ## Cluster variables
@@ -106,6 +109,13 @@ xyvals = lapply(seq_along(vals), function(i)
 #### Save as a data table and raster
 ## Data table
 database = rbindlist(xyvals)
+
+database[, checkNA := rowSums(.SD, na.rm = FALSE), .SDcols = c(paste0("bio60_0", 1:9), paste0("bio60_", 10:19))]
+database[, col := ifelse(is.na(checkNA), "red", "blue")]
+
+jpeg("checkNA.jpg", height = 1080, width = 1080, quality = 100)
+plot(database[, x], database[, y], col = database[, col], pch = 15, cex = 0.2)
+dev.off()
 
 # Reorder and rename columns
 setcolorder(x = database, neworder = sort(names(database)))

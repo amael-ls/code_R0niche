@@ -19,6 +19,6 @@ chosenModel = "model_7.rds"
 for (folder in ls_folders)
 {
 	model = readRDS(paste0("./", folder, "/", chosenModel))
-	fixef = model$coefficients[1:12]
+	fixef = model$coefficients
 	saveRDS(fixef, paste0("./", folder, "/fixef.rds"))
 }

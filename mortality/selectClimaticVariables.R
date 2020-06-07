@@ -19,15 +19,15 @@
 ## Annual variables (Lines 2010). These two variables are correlated to many others, but interpretability?
 if (formula_id == 1)
 {
-	model = stan_glmer(formula = deltaState ~ 1 + (1 | plot_id) +
+	model = stan_glm(formula = deltaState ~ 1 +
 		canopy_status*(annual_mean_temperature + I(annual_mean_temperature^2) +
 			annual_precipitation + I(annual_precipitation^2)) + dbh + I(dbh^2),
 		data = mortality_data_norm,
-		family = binomial, iter = 2000, cores = 4, chains = 4,
+		family = binomial(link = "cloglog"), offset = log(deltaYear), iter = 3000, cores = 4, chains = 4,
 		prior = normal(),
 		prior_intercept = normal(),
 		prior_aux = exponential(),
-		prior_covariance = decov(),
+		# prior_covariance = decov(),
 		prior_PD = FALSE,
 		# diagnostic_file = paste0(savePath, "diagnostic", formula_id, ".csv"),
 		algorithm = "sampling")
@@ -37,16 +37,16 @@ if (formula_id == 1)
 ## Driest variables (water deficiency)
 if (formula_id == 2)
 {
-	model = stan_glmer(formula = deltaState ~ 1 + (1 | plot_id) +
+	model = stan_glm(formula = deltaState ~ 1 +
 		canopy_status*(mean_temperature_of_driest_quarter +
 			I(mean_temperature_of_driest_quarter^2) +
 			precipitation_of_driest_quarter + I(precipitation_of_driest_quarter^2)) + dbh + I(dbh^2),
 		data = mortality_data_norm,
-		family = binomial, iter = 2000, cores = 4, chains = 4,
+		family = binomial(link = "cloglog"), offset = log(deltaYear), iter = 3000, cores = 4, chains = 4,
 		prior = normal(),
 		prior_intercept = normal(),
 		prior_aux = exponential(),
-		prior_covariance = decov(),
+		# prior_covariance = decov(),
 		prior_PD = FALSE,
 		# diagnostic_file = paste0(savePath, "diagnostic", formula_id, ".csv"),
 		algorithm = "sampling")
@@ -56,16 +56,16 @@ if (formula_id == 2)
 ## Warmest variables (hottest period, potentially combined with water deficiency)
 if (formula_id == 3)
 {
-	model = stan_glmer(formula = deltaState ~ 1 + (1 | plot_id) +
+	model = stan_glm(formula = deltaState ~ 1 +
 		canopy_status*(mean_temperature_of_warmest_quarter +
 			I(mean_temperature_of_warmest_quarter^2) +
 			precipitation_of_warmest_quarter + I(precipitation_of_warmest_quarter^2)) + dbh + I(dbh^2),
 		data = mortality_data_norm,
-		family = binomial, iter = 2000, cores = 4, chains = 4,
+		family = binomial(link = "cloglog"), offset = log(deltaYear), iter = 3000, cores = 4, chains = 4,
 		prior = normal(),
 		prior_intercept = normal(),
 		prior_aux = exponential(),
-		prior_covariance = decov(),
+		# prior_covariance = decov(),
 		prior_PD = FALSE,
 		# diagnostic_file = paste0(savePath, "diagnostic", formula_id, ".csv"),
 		algorithm = "sampling")
@@ -75,16 +75,16 @@ if (formula_id == 3)
 ## Driest month pp, driest quarter temp (extrem drought)
 if (formula_id == 4)
 {
-	model = stan_glmer(formula = deltaState ~ 1 + (1 | plot_id) +
+	model = stan_glm(formula = deltaState ~ 1 +
 		canopy_status*(mean_temperature_of_driest_quarter +
 			I(mean_temperature_of_driest_quarter^2) +
 			precipitation_of_driest_month + I(precipitation_of_driest_month^2)) + dbh + I(dbh^2),
 		data = mortality_data_norm,
-		family = binomial, iter = 2000, cores = 4, chains = 4,
+		family = binomial(link = "cloglog"), offset = log(deltaYear), iter = 3000, cores = 4, chains = 4,
 		prior = normal(),
 		prior_intercept = normal(),
 		prior_aux = exponential(),
-		prior_covariance = decov(),
+		# prior_covariance = decov(),
 		prior_PD = FALSE,
 		# diagnostic_file = paste0(savePath, "diagnostic", formula_id, ".csv"),
 		algorithm = "sampling")
@@ -94,16 +94,16 @@ if (formula_id == 4)
 ## Annual pp, driest quarter temp (in case of there is a water storage effect)
 if (formula_id == 5)
 {
-	model = stan_glmer(formula = deltaState ~ 1 + (1 | plot_id) +
-		canopy_status*(mean_temperature_of_driest_quarter +
+	model = stan_glm(formula = deltaState ~ 1 +
+			canopy_status*(mean_temperature_of_driest_quarter +
 			I(mean_temperature_of_driest_quarter^2) +
 			annual_precipitation + I(annual_precipitation^2)) + dbh + I(dbh^2),
 		data = mortality_data_norm,
-		family = binomial, iter = 2000, cores = 4, chains = 4,
+		family = binomial(link = "cloglog"), offset = log(deltaYear), iter = 3000, cores = 4, chains = 4,
 		prior = normal(),
 		prior_intercept = normal(),
 		prior_aux = exponential(),
-		prior_covariance = decov(),
+		# prior_covariance = decov(),
 		prior_PD = FALSE,
 		# diagnostic_file = paste0(savePath, "diagnostic", formula_id, ".csv"),
 		algorithm = "sampling")
@@ -113,16 +113,16 @@ if (formula_id == 5)
 ## Min temperature, driest precipitation month (Xylem froze + extrem drought)
 if (formula_id == 6)
 {
-	model = stan_glmer(formula = deltaState ~ 1 + (1 | plot_id) +
+	model = stan_glm(formula = deltaState ~ 1 +
 		canopy_status*(min_temperature_of_coldest_month +
 			I(min_temperature_of_coldest_month^2) +
 			precipitation_of_driest_month + I(precipitation_of_driest_month^2)) + dbh + I(dbh^2),
 		data = mortality_data_norm,
-		family = binomial, iter = 2000, cores = 4, chains = 4,
+		family = binomial(link = "cloglog"), offset = log(deltaYear), iter = 3000, cores = 4, chains = 4,
 		prior = normal(),
 		prior_intercept = normal(),
 		prior_aux = exponential(),
-		prior_covariance = decov(),
+		# prior_covariance = decov(),
 		prior_PD = FALSE,
 		# diagnostic_file = paste0(savePath, "diagnostic", formula_id, ".csv"),
 		algorithm = "sampling")
@@ -132,16 +132,16 @@ if (formula_id == 6)
 ## Min temperature, driest precipitation 3 months (Xylem froze + longer period drought)
 if (formula_id == 7)
 {
-	model = stan_glmer(formula = deltaState ~ 1 + (1 | plot_id) +
+	model = stan_glm(formula = deltaState ~ 1 +
 		canopy_status*(min_temperature_of_coldest_month +
 			I(min_temperature_of_coldest_month^2) +
 			precipitation_of_driest_quarter + I(precipitation_of_driest_quarter^2)) + dbh + I(dbh^2),
 		data = mortality_data_norm,
-		family = binomial, iter = 2000, cores = 4, chains = 4,
+		family = binomial(link = "cloglog"), offset = log(deltaYear), iter = 3000, cores = 4, chains = 4,
 		prior = normal(),
 		prior_intercept = normal(),
 		prior_aux = exponential(),
-		prior_covariance = decov(),
+		# prior_covariance = decov(),
 		prior_PD = FALSE,
 		# diagnostic_file = paste0(savePath, "diagnostic", formula_id, ".csv"),
 		algorithm = "sampling")

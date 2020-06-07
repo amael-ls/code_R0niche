@@ -56,7 +56,7 @@ ls_waic = vector(mode = "list", length = n)
 for (i in 1:n)
 {
 	loadPath = paste0("./", ls_folders[i], "/")
-	waic_files = list.files(path = loadPath, pattern = "waic[0-9]{1,}_submodels.rds")
+	waic_files = list.files(path = loadPath, pattern = "waic[0-9]{1,}_submodel.rds")
 	nbModels = length(waic_files) + 1 # + 1 for the selected 'mother' model
 	species_txt = list.files(path = loadPath, pattern = "^[0-9]{4,}")
 	species_txt = species_txt[stri_detect(str = species_txt, regex = ".txt")]

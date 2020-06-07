@@ -5,6 +5,7 @@ Due to the stiffness of the function $\exp \left[-\int \frac{1}{G}\right]$ , I u
 ## Mandatory programs
 
 1. **main.m** to calculate the time it takes to grow up to a given height
+2. **calc_time.R** to extract min, max, mean, and median time with the 2006-2010 climate data
 
 ## Dependent scripts
 
