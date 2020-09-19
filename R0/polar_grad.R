@@ -72,6 +72,9 @@ azimuthPlot = function(radius, theta, degree, species_labels, alternateArrows = 
 ## Gradient for s* = 0 and s* = 10
 average_gradient = readRDS("average_gradient.rds")
 
+##Correlation with SDMs
+correl_dt = readRDS("../validation/correlation.rds")
+
 ## Compute the azimuth of the averaged gradient
 average_gradient[, az_north_10 := azimuth_grad(dx = dx_north_10, dy = dy_north_10, reverse = TRUE)]
 average_gradient[, az_south_10 := azimuth_grad(dx = dx_south_10, dy = dy_south_10, reverse = TRUE)]
@@ -112,8 +115,9 @@ print(gradient_xt, file = "./gradient.tex", include.rownames = FALSE, booktabs =
 nbSpecies = average_gradient[, .N]
 for (i in 1:nbSpecies)
 {
-	species = average_gradient[i, species]
-	tikz(paste0("azimuth_", species, "_10.tex"), width = 1.5, height = 1.5)
+	spName = average_gradient[i, species]
+	correl = correl_dt[sp_code == spName, correl_10m]
+	tikz(paste0("azimuth_", spName, "_10.tex"), width = 1.5, height = 1.5)
 	op = par(mar = c(0, 0, 0, 0))
 
 	plot(x = NULL, y = NULL, xlim = c(-1.25, 1.25),
@@ -131,18 +135,21 @@ for (i in 1:nbSpecies)
 	theta = theta*pi/180
 	x = sin(theta)
 	y = cos(theta)
-	sfsmisc::p.arrows(x1 = 0, y1 = 0.5, x2 = x, y2 = 0.5 + y, col = "#2058DC", fill = "#2058DC")
+	sfsmisc::p.arrows(x1 = 0, y1 = 0.5, x2 = x, y2 = 0.5 + y, col = "#2058DC", fill = "#2058DC",
+		lwd = 2.5)
 
 	# South
 	theta = average_gradient[i, az_south_10]
 	theta = theta*pi/180
 	x = sin(theta)
 	y = cos(theta)
-	sfsmisc::p.arrows(x1 = 0, y1 = -0.5, x2 = x, y2 = -0.5 + y, col = "#FD9859", fill = "#FD9859")
+	sfsmisc::p.arrows(x1 = 0, y1 = -0.5, x2 = x, y2 = -0.5 + y, col = "#FD9859", fill = "#FD9859",
+		lwd = 2.5)
 
 	## Add points (origin of arrows)
 	points(0, 0.5, pch = 20, col = "#2058DC")
 	points(0, -0.5, pch = 20, col = "#FD9859")
+	# text(x = 0.75, y = 1, labels = paste0("(", round(correl, 2), ")"))
 
 	dev.off()
 }
@@ -229,5 +236,8 @@ text(0, 0.8, "N", pos = 3, offset = 0.25)
 text(0.8, 0, "E", pos = 4, offset = 0.25)
 text(0, -0.8, "S", pos = 1, offset = 0.25)
 text(-0.8, 0, "W", pos = 2, offset = 0.25)
+
+# Correlation
+# text(x = 0.75, y = 1, labels = "Cor($ \\tilde \\rho_0 $, SDM)")
 
 dev.off()
