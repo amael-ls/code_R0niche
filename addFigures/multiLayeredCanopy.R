@@ -32,16 +32,16 @@ compute_sStar_patch = function(height, supBound, a, b, T_param, plotArea, id, to
 		s_star = (supBound + infBound)/2
 		understorey_ind = s_star <= height
 		indices = understorey_ind & !beyondSupBound_ind
-		
+
 		if (!any(indices))
 		{
 			supBound = s_star
-			next;
+			next
 		}
 
 		distToTop = height[indices] - s_star
 		sumArea = sum(heightToCrownArea(height[indices], distToTop, a[indices], b[indices], T_param[indices], C0_C1))
-		
+
 		if (sumArea < plotArea)
 			supBound = s_star
 		if (sumArea >= plotArea)
@@ -60,7 +60,7 @@ check_sStar = function(height, supBound, s_star, a, b, T_param, plotArea, id)
 		print(id)
 
 	supBound = max(supBound)
-	
+
 	# Index of heights to keep
 	beyondSupBound_ind = supBound < height # Exclude trees taller than supBound (useful for 2nd, 3rd, ... layer computation)
 	overstorey_ind = s_star <= height
@@ -113,6 +113,23 @@ treeData[, s_star3 := compute_sStar_patch(height, s_star2, a, b, T_param, unique
 treeData[, sumArea3 := check_sStar(height, unique(s_star2), unique(s_star3), a, b, T_param, unique(plot_size), id), by = id]
 
 saveRDS(treeData, "./treeWith_s_star.rds")
+
+#### Plot figure
+treeData = readRDS("./tree3_check.rds")
+treeData[, nbIndiv := .N, by = id]
+aa = unique(treeData[, .(id, nbIndiv, s_star2)])
+
+pdf("test.pdf")
+par(mfrow = c(3,1))
+hist(unique(treeData[, s_star]), main = "First layer s*")
+hist(unique(treeData[, s_star2]), main = "Second layer s*")
+hist(unique(treeData[, s_star3]), main = "Third layer s*")
+dev.off()
+
+pdf("test2.pdf")
+plot(aa[, nbIndiv], aa[, s_star2])
+dev.off()
+
 
 #### Crash test zone
 # treeData[, diff := plot_size - sumArea]
