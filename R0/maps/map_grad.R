@@ -10,7 +10,7 @@ library(sf)
 options(max.print = 500)
 rm(list = ls())
 
-#### Tool function
+#### Tool functions
 ## Compute x, y and, dx, dy
 sa2xy = function(sa, scaleSlope, aspX, aspY)
 {
@@ -236,18 +236,23 @@ for (i in 1:length(ls_folder))
 	maxR0 = cellStats(x = clim_2010, stat = "max", na.rm = TRUE)
 	clim_2010$R0_scaled = (clim_2010$R0 - minR0)/(maxR0 - minR0)
 
-	# Save lon-lat, R0, rho_0 sp-specific data
-	path_lonLat_rs = paste0("../results/", folder, "/", height_canopy, "/")
-	if (!dir.exists(path_lonLat_rs))
-		dir.create(path_lonLat_rs)
+	# # Save lon-lat, R0, rho_0 sp-specific data
+	# path_lonLat_rs = paste0("../results/", folder, "/", height_canopy, "/")
+	# if (!dir.exists(path_lonLat_rs))
+	# 	dir.create(path_lonLat_rs)
 
-	writeRaster(clim_2010, filename = paste0(path_lonLat_rs, "lonLatR0cropped.grd"), bandorder='BIL', overwrite = TRUE)
+	# writeRaster(clim_2010, filename = paste0(path_lonLat_rs, "lonLatR0cropped.grd"), bandorder='BIL', overwrite = TRUE)
 
 	## Bounding box of plot
 	lonMin = unname(data_bbox["xmin"]) - 100
 	lonMax = unname(data_bbox["xmax"]) + 30000 # To get Nova Scotia completely
 	latMin = unname(data_bbox["ymin"]) - 60000 # To get Florida completely
 	latMax = unname(data_bbox["ymax"]) + 100
+
+	# ! --- Start "code block added after the program addFigures/diff_PresAbs.R ran"
+	borderlines = raster(paste0("../../addFigures/diff_presAbs/", species, ".grd"))
+	borderlines = aggregate(borderlines, fact = 2) # to make cells larger
+	# ! --- End "code block added after the program addFigures/diff_PresAbs.R ran"
 
 	## Spatial plot of R0(h* = 10m)
 	# Format = jpeg. arrow.plot is reverse to get direction of increase (-sa[, .(dx, dy)])
@@ -256,9 +261,10 @@ for (i in 1:length(ls_folder))
 		xlab = "", ylab = "", bg = "transparent")
 	plot(clim_2010[["R0_scaled"]], cex = 0.5, pch = 19, add = TRUE, legend = FALSE, # , "#4269E2"
 		col = c("#000000", "#2A3344", "#1122AA", "#2058DC", "#5A82EA", "#FDECBE", "#FDDB5B", "#FAB935", "#FD9859", "#B6343A"))
-	plot(little1971, col = NA, border = "#000000", add = TRUE, lwd = 2) # "#DD925C"
-	plot(canada, col = NA, add = TRUE, lwd = 2)
-	plot(usa, col = NA, add = TRUE, lwd = 2)
+	plot(borderlines, cex = 0.5, pch = 19, add = TRUE, legend = FALSE, col = "#00FF00")
+	plot(little1971, col = NA, border = "#000000", add = TRUE, lwd = 4) # "#DD925C"
+	plot(canada, col = NA, add = TRUE, lwd = 4)
+	plot(usa, col = NA, add = TRUE, lwd = 4)
 	plot(erie, col = "#FFFFFF", border = "#000000", add = TRUE)
 	plot(huron, col = "#FFFFFF", border = "#000000", add = TRUE)
 	plot(michigan, col = "#FFFFFF", border = "#000000", add = TRUE)
@@ -266,12 +272,12 @@ for (i in 1:length(ls_folder))
 	plot(stClair, col = "#FFFFFF", border = "#000000", add = TRUE)
 	plot(superior, col = "#FFFFFF", border = "#000000", add = TRUE)
 	arrow.plot(a1 = sa[, x], a2 = sa[, y], u = -sa[, dx], v = -sa[, dy],
-		true.angle = TRUE, arrowfun = sfsmisc::p.arrows, fill = "white", lty = "blank")
+		true.angle = TRUE, arrowfun = sfsmisc::p.arrows, fill = "white", size = 1.5, lty = "blank")
 	arrow.plot(a1 = centroid_north["x"], a2 = centroid_north["y"], u = -dx_north, v = -dy_north,
-		true.angle = TRUE, arrowfun = sfsmisc::p.arrows, fill = "red", size = 2, lty = "blank")
+		true.angle = TRUE, arrowfun = sfsmisc::p.arrows, fill = "red", size = 3, lty = "blank")
 	arrow.plot(a1 = centroid_south["x"], a2 = centroid_south["y"], u = -dx_south, v = -dy_south,
-		true.angle = TRUE, arrowfun = sfsmisc::p.arrows, fill = "red", size = 2, lty = "blank")
-	points(x = centroid["x"], y = centroid["y"], pch = 15, cex = 3, col = "#00ff00")
+		true.angle = TRUE, arrowfun = sfsmisc::p.arrows, fill = "red", size = 3, lty = "blank")
+	points(x = centroid["x"], y = centroid["y"], pch = 15, cex = 4, col = "#00ff00")
 	# text(x = centroid["x"], y = centroid["y"], labels = "C", pos = 4, cex = 2.5, offset = 0.8, family = "CM Roman")
 	dev.off()
 
