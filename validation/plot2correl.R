@@ -42,8 +42,8 @@ shadeH = col2rgb("#010120")[,1]
 
 #### Plot
 tikz("3correlations.tex", width = 6.5, height = 5)
-op = par(mar = c(0, 3, 0, 2), mgp = c(1.5, 0.75, 0),
-	oma = c(0,0,0.9,0), tck = -0.015, las = 1)
+op = par(mar = c(3, 3, 3, 2), mgp = c(1.5, 0.75, 0),
+	oma = c(0,0,2,0), tck = -0.015, las = 1)
 
 plot(x = NULL, y = NULL, xlim = c(0.65, nbSpecies + 0.35),
 	ylim = c(-1.3, 1.3), axes = FALSE, xlab = "",
@@ -107,10 +107,13 @@ tikzAnnotate(paste0("\\definecolor{shadeM}{RGB}{", paste(shadeM, collapse = ",")
 tikzAnnotate(paste0("\\definecolor{shadeH}{RGB}{", paste(shadeH, collapse = ","), "}"))
 
 tikzAnnotate("
-	\\matrix [below right] at (current bounding box.north west) {
+	\\matrix [below right = 1cm and 0cm] at (current bounding box.north west) {
 		\\node [shape = rectangle, fill = shadeL, label = right:Low] {}; &
 		\\node [shape = rectangle, fill = shadeM, label = right:Medium] {}; &
 		\\node [shape = rectangle, fill = shadeH, label = right:High] {}; \\\\
 	};
 ")
+
+tikzAnnotate("\\node [below right = 0.5cm and 0cm] at (current bounding box.north west) {Shade tolerance:};")
+
 dev.off()
