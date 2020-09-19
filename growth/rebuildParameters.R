@@ -311,7 +311,7 @@ dev.off()
 # For article
 tikz('./G_over-under-storey_averaged.tex', width = 3.1, height = 3.1) #, standAlone = TRUE)
 op <- par(mar = c(2.5, 2.5, 0.2, 0.2), mgp = c(1.5, 0.3, 0), tck = -0.015)
-plot(growth_dt[, ref_b], growth_dt[, ref_a], pch = 19, cex = 1.5,
+plot(growth_dt[, ref_b], growth_dt[, ref_a], pch = 19,
 	xlab = "Understorey growth (mm/yr)", ylab = "Overstorey growth (mm/yr)",
 	xlim = c(axe_min, axe_max), ylim = c(axe_min, axe_max))
 
@@ -419,6 +419,28 @@ dev.off()
 # 	xlab = "Shade tolerance level", ylab = "Response of $ G $ to light")
 # dev.off()
 
+# ## Tikz version of average conditions, version proposed by Referee 2, to avoid panel b
+# # For article
+# referee2_dt = growth_dt[, .(species_id, ref_a, ref_b)]
+# referee2_dt = referee2_dt[tsn_dt[, .(species_id, species, tolLevel)], on = "species_id"]
+
+# shadeL = "#00F9FF"
+# shadeM = "#0E51FF"
+# shadeH = "#010120"
+
+# referee2_dt[tolLevel == "H", col := shadeH]
+# referee2_dt[tolLevel == "M", col := shadeM]
+# referee2_dt[tolLevel == "L", col := shadeL]
+
+# tikz('./G_over-under-storey_averaged.tex', width = 3.1, height = 3.1) #, standAlone = TRUE)
+# op <- par(mar = c(2.5, 2.5, 0.2, 0.2), mgp = c(1.5, 0.3, 0), tck = -0.015)
+# plot(growth_dt[, ref_b], growth_dt[, ref_a], pch = 19, cex = 1.5, col = referee2_dt[, col],
+# 	xlab = "Understorey growth (mm/yr)", ylab = "Overstorey growth (mm/yr)",
+# 	xlim = c(axe_min, axe_max), ylim = c(axe_min, axe_max))
+
+# # Add identity line
+# abline(a = 0, b = 1, lwd = 2)
+# dev.off()
 
 ## Output tsn_dt
 saveRDS(tsn_dt, "./tsn.rds")

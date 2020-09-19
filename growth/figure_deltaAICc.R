@@ -20,7 +20,7 @@ ls_folders = list.files(path = "./", pattern = "^array_[0-9]")
 nbSpecies = length(ls_folders)
 modelsToKeep = paste0("model", c(2, 18, 19, 22)) # cf comments introduction
 
-mods = data.table(keptModels = modelsToKeep, variables = c("selected", "climate", "competition", "dbh"))
+mods = data.table(keptModels = modelsToKeep, variables = c("best model", "climate", "competition", "dbh"))
 
 ## Read the tables containing the Delta_AICc and R², 25 rows (i.e., models) per species
 ls_delta_aic = vector(mode = "list", length = nbSpecies)
